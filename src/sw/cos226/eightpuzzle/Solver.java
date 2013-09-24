@@ -4,23 +4,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.Stack;
+import java.util.LinkedList;
 
 import sw.cos226.utils.MinPQ;
 
 public class Solver {
-
-	static int moves = 0;
-
-	public static Comparator<Board> BOARDCOMPARATOR = new Comparator<Board>() {
-
-		public int compare(Board b1, Board b2) {
-			return Integer.valueOf((b1.hamming() + moves)).compareTo(Integer.valueOf((b1.hamming() + moves)));
-		}
-	};
-
-	MinPQ<Board> minPQ = new MinPQ<Board>(BOARDCOMPARATOR);
+	private MinPQ<Node> minPQ = new MinPQ<Node>();
+	private Node solution = null;
 	
 	/**
 	 * Find a solution to the initial {@link Board} (using the A* algorithm)
@@ -28,11 +18,14 @@ public class Solver {
 	 * @param initial
 	 */
 	public Solver(Board initial) {
-		minPQ.insert(initial);
+		minPQ.insert(new Node(0, initial));
+		if(isSolvable()) {
+			solve();
+		}
 	}
 
 	/**
-	 * Is the initial board solvable?
+	 * Is the initial board solvable?  Use invariants to detect this?
 	 * 
 	 * @return
 	 */
@@ -46,37 +39,52 @@ public class Solver {
 	 * @return -1 if no solution
 	 */
 	public int moves() {
-		return 0;
+		return solution.getMoves();
 	}
 
+	private void solve() {
+		if(isSolvable()) {
+			Node temp = minPQ.delMin();
+			Node prevTemp = temp;
+			Board tempBoard = temp.getBoard(); 
+			while(!tempBoard.isGoal()) {
+				for(Board neighbor : tempBoard.neighbors()) {
+					if(!prevTemp.equals(neighbor)) {
+						minPQ.insert(new Node(temp.getMoves() + 1, neighbor, temp));
+					}
+				}
+				prevTemp = temp;
+				temp = minPQ.delMin();
+				tempBoard = temp.getBoard(); 
+			}
+			solution = temp;
+		}
+	}
+	
+	
 	/**
 	 * sequence of boards in a shortest solution
 	 * 
 	 * @return null if no solution
 	 */
 	public Iterable<Board> solution() {
-		Stack<Board> solution = new Stack<Board>();
-		if(isSolvable()) {
-			Board temp = minPQ.delMin();
-			Board prevTemp = temp;
-			solution.add(temp);
-			while(!temp.isGoal()) {
-				for(Board neighbor : temp.neighbors()) {
-					if(!prevTemp.equals(neighbor)) {
-						minPQ.insert(neighbor);
-					}
-				}
-				prevTemp = temp;
-				temp = minPQ.delMin();
-				System.out.print(temp);
-				solution.add(temp);
-				moves++;
-			}
+		LinkedList<Board> solutionStack = new LinkedList<Board>();
+		Node tsol = solution;
+		while(tsol != null && tsol.getBoard() != null) {
+			solutionStack.addFirst(tsol.getBoard());
+			tsol = tsol.getPreviousNode();
 		}
-		return null;
+		
+		return solutionStack;
 	}
 
 	public static void main(String[] args) {
+		if (args.length != 1) {
+	        System.err.println("Incorrect number of arguments.");
+	        System.err.println("Usage: ./eightpuzzle.jar <puzzlefile.txt>");
+	        System.exit(1);
+		}
+		
 		int[][] blocks = null;
 		try {
 			BufferedReader in = new BufferedReader(new FileReader(new File(args[0])));
@@ -84,7 +92,7 @@ public class Solver {
 			blocks = new int[N][N];
 			String line = in.readLine();
 			int i = 0;
-			while (line != null) {
+			while (line != null && !line.trim().isEmpty()) {
 				String[] stringLine = line.trim().split("\\s+");
 				for (int j = 0; j < N; j++) {
 					blocks[i][j] = Integer.parseInt(stringLine[j]);
@@ -114,12 +122,12 @@ public class Solver {
 //		}
 
 		Solver solver = new Solver(initial);
-		if (!solver.isSolvable())
+		if (!solver.isSolvable()) {
 			System.out.println("No solution possible");
-		else {
+		} else {
 			System.out.println("Minimum number of moves = " + solver.moves());
-			for (Board board : solver.solution()) {
-				System.out.println(board);
+			for (Board n : solver.solution()) {
+				System.out.println(n);
 			}
 		}
 	}

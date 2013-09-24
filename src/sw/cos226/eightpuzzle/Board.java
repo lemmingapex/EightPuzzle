@@ -81,7 +81,7 @@ public class Board {
 	public boolean isGoal() {
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < N; j++) {
-				if (blocks[i][j] != ((i * N) + j + 1) % N*N) {
+				if (blocks[i][j] != ((i * N) + j + 1) % (N*N)) {
 					return false;
 				}
 			}
@@ -89,7 +89,11 @@ public class Board {
 		return true;
 	}
 
-	// a board obtained by exchanging two adjacent blocks in the same row
+	/**
+	 * a board obtained by exchanging two adjacent blocks in the same row
+	 * 
+	 * @return
+	 */
 	public Board twin() {
 		return null;
 	}
