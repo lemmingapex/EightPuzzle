@@ -5,11 +5,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.LinkedList;
-
-import sw.cos226.utils.MinPQ;
+import java.util.PriorityQueue;
 
 public class Solver {
-	private MinPQ<Node> minPQ = new MinPQ<Node>();
+	private PriorityQueue<Node> minPQ = new PriorityQueue<Node>();
 	private Node solution = null;
 	
 	/**
@@ -18,19 +17,8 @@ public class Solver {
 	 * @param initial
 	 */
 	public Solver(Board initial) {
-		minPQ.insert(new Node(0, initial));
-		if(isSolvable()) {
-			solve();
-		}
-	}
-
-	/**
-	 * Is the initial board solvable?  Use invariants to detect this?
-	 * 
-	 * @return
-	 */
-	public boolean isSolvable() {
-		return true;
+		minPQ.add(new Node(0, initial));
+		solve();
 	}
 
 	/**
@@ -42,20 +30,25 @@ public class Solver {
 		return solution.getMoves();
 	}
 
+	/**
+	 * The main algorithm to slove the puzzle
+	 * 
+	 */
 	private void solve() {
-		if(isSolvable()) {
-			Node temp = minPQ.delMin();
+		if(minPQ.peek().getBoard().isSolvable()) {
+			Node temp = minPQ.poll();
 			Node prevTemp = temp;
 			Board tempBoard = temp.getBoard(); 
 			while(!tempBoard.isGoal()) {
 				for(Board neighbor : tempBoard.neighbors()) {
-					if(!prevTemp.equals(neighbor)) {
-						minPQ.insert(new Node(temp.getMoves() + 1, neighbor, temp));
+					if(!prevTemp.getBoard().equals(neighbor)) {
+						minPQ.add(new Node(temp.getMoves() + 1, neighbor, temp));
 					}
 				}
 				prevTemp = temp;
-				temp = minPQ.delMin();
-				tempBoard = temp.getBoard(); 
+				temp = minPQ.poll();
+				tempBoard = temp.getBoard();
+				//System.out.println(tempBoard);
 			}
 			solution = temp;
 		}
@@ -63,9 +56,9 @@ public class Solver {
 	
 	
 	/**
-	 * sequence of boards in a shortest solution
+	 * Sequence of boards in a shortest solution
 	 * 
-	 * @return null if no solution
+	 * @return Empty collection if no solution
 	 */
 	public Iterable<Board> solution() {
 		LinkedList<Board> solutionStack = new LinkedList<Board>();
@@ -121,10 +114,10 @@ public class Solver {
 //			System.out.println("IsGoal: " + b.isGoal());
 //		}
 
-		Solver solver = new Solver(initial);
-		if (!solver.isSolvable()) {
+		if (!initial.isSolvable()) {
 			System.out.println("No solution possible");
 		} else {
+			Solver solver = new Solver(initial);
 			System.out.println("Minimum number of moves = " + solver.moves());
 			for (Board n : solver.solution()) {
 				System.out.println(n);

@@ -1,4 +1,4 @@
-8 Puzzle
+[8 Puzzle](http://en.wikipedia.org/wiki/15_puzzle)
 ====================
 Scott Wiedemann
 
@@ -11,7 +11,7 @@ ant
 
 Run It
 ------
-./target/eightpuzzle.jar <puzzle.txt>
+./target/eightpuzzle.jar &lt;puzzle.txt&gt;
 
 
 Run-time
